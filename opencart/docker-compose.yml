@@ -1,0 +1,44 @@
+version: "2"
+
+services:
+  web-server:
+    build: .
+    ports:
+      - "8001:80"   # 80 - http
+#      - "8002:443"  # 443 - https
+    volumes:
+      - ./src:/var/www/html/
+      - ./storage:/var/www/storage/
+      - ./dev.config/config.php:/var/www/html/config.php
+      - ./dev.config/admin/config.php:/var/www/html/adm/config.php
+    links:
+      - database
+    networks:
+      - default
+  database:
+    image: mysql:8.1.0
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: opencart-db
+      MYSQL_USER: opencart
+      MYSQL_PASSWORD: opencart
+      MYSQL_ROOT_PASSWORD: superSecretPassword
+    volumes:
+      - ./dump:/docker-entrypoint-initdb.d
+      - persistent:/var/lib/mysql
+    networks:
+      - default
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:5.2.1
+    links:
+      - database:db
+    ports:
+      - 8000:80
+    environment:
+      MYSQL_USER: opencart
+      MYSQL_PASSWORD: opencart
+      MYSQL_ROOT_PASSWORD: superSecretPassword
+
+volumes:
+  persistent:
